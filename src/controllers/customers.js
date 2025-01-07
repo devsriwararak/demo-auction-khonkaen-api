@@ -1,6 +1,5 @@
 import db from "../config/db.js";
 
-// ต้องการเขียน query แบบปลอดภัย ต้องการเปิดปิด ให้ไม่เปลืองทรัพยากร
 export const getAllCustomer = async (req, res) => {
   let pool = await db.getConnection();
 
