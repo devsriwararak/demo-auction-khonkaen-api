@@ -2,10 +2,13 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 
+
 // Components
-import customerRouter from './routes/customers.js'
 import authRouter from './routes/auth.js'
 import auctionTitleRouter from './routes/auction_title.js'
+import customerRouter from './routes/customer.js'
+import productRouter from './routes/product.js'
+import auctionRouter from './routes/auction.js'
 
 
 const app = express()
@@ -18,6 +21,37 @@ app.use(bodyParser.json())
 app.use('/api/customer', customerRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/auction_title', auctionTitleRouter)
+app.use('/api/product', productRouter)
+app.use('/api/auction', auctionRouter)
 
 
-export default app
+
+
+// Routes ตัวอย่าง (คุณมี API ของคุณเอง)
+// API เพื่อเริ่ม Socket.IO
+// app.post("/api/socket/start", (req, res) => {
+//     console.log("API: Start socket requested");
+  
+//     const server = req.app.get("server");
+//     if (!server) return res.status(500).json({ error: "Server not found" });
+  
+//     const io = initializeSocket(server);
+//     if (io) {
+//       console.log("API: Socket server started.");
+//       return res.status(200).json({ message: "Socket server started" });
+//     }
+  
+//     res.status(500).json({ error: "Socket server failed to start" });
+//   });
+  
+//   // API เพื่ออัปเดตข้อมูล
+//   app.post("/api/socket/update", (req, res) => {
+//     const { newData } = req.body;
+//     if (!newData)
+//       return res.status(400).json({ error: "No data provided for update" });
+  
+//     updateAuctionData(newData);
+//     res.status(200).json({ message: "Auction data updated", data: getAuctionData() });
+//   });
+  
+  export default app;

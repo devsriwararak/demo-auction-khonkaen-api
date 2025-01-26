@@ -1,12 +1,12 @@
 import db from "../config/db.js";
 import ExcelJS from "exceljs";
+import { genCode } from "../config/lib.js";
 
-// Node.js
 export const getAll = async (req, res) => {
   let pool = await db.getConnection();
 
   try {
-    const { startDate, endDate, search } = req.body;
+    const { search } = req.body;
 
     // pagination
     const limit = 10;
@@ -14,24 +14,15 @@ export const getAll = async (req, res) => {
     const offset = (page - 1) * limit;
 
     // SQL Total Page
-    let countSql = `SELECT COUNT(*) as totalCount FROM auction_title `;
+    let countSql = `SELECT COUNT(*) as totalCount FROM customer `;
     let countParams = [];
 
     // SQL main Page
-    let sql = `SELECT 
-        id, name , 
-        DATE_FORMAT(date, '%d/%m/%Y') as date ,
-        status
-        FROM auction_title `;
+    let sql = `SELECT id, code, name, tel FROM customer `;
 
     let whereConditions = [];
     let params = [];
 
-    if (startDate && endDate) {
-      whereConditions.push(` date BETWEEN ? AND ? `);
-      params.push(startDate, endDate);
-      countParams.push(startDate, endDate);
-    }
     if (search) {
       whereConditions.push(` name LIKE ? `);
       params.push(`%${search}%`);
@@ -45,7 +36,7 @@ export const getAll = async (req, res) => {
     }
 
     // Data Main Page
-    sql += ` ORDER BY date DESC LIMIT ? OFFSET ? `;
+    sql += ` ORDER BY id DESC LIMIT ? OFFSET ? `;
     params.push(limit, offset);
     const [result] = await pool.query(sql, params);
 
@@ -71,34 +62,52 @@ export const getAll = async (req, res) => {
 export const addNew = async (req, res) => {
   let pool = await db.getConnection();
   try {
-    const { name, date, id } = req.body;
-    let checkId = false;
+    const {
+      id,
+      name,
+      address_customer,
+      address_send,
+      contact,
+      noun,
+      tel,
+      ref,
+    } = req.body;
     console.log(req.body);
     
 
-    if (!name && !date)
+    let checkId = false;
+
+    if (!name && !tel)
       return res.status(400).json({ message: "ส่งข้อมูลไม่ครบ" });
     if (id) checkId = true;
 
     // Check ซ้ำ เฉพาะ วันนี้ วันอื่นไม่เป็นไร
-    const sqlCheck = `SELECT id FROM auction_title WHERE name = ? AND date = ? AND id != ? `;
-    const [resultCheck] = await pool.query(sqlCheck, [name, date, id]);
+    const sqlCheck = `SELECT id FROM customer WHERE name = ?  AND id != ? `;
+    const [resultCheck] = await pool.query(sqlCheck, [name, id]);
     if (resultCheck.length > 0)
       return res.status(400).json({ message: "มีข้อมูลนี้แล้ว" });
 
+    // ค้นหา code ล่าสุดในปีนี้
+    const [rows] = await pool.query(
+      `SELECT code FROM customer ORDER BY code DESC LIMIT 1`
+    );
+    const lastCode = rows[0].code;
+    const newCode = await genCode(lastCode, "BD");
+
     if (!checkId) {
       //บันทึก
-      const sql = `INSERT INTO auction_title (name, date) VALUES (?, ?)`;
-      await pool.query(sql, [name, date]);
+      const sql = `INSERT INTO customer (code, name, address_customer, address_send, contact, noun, tel, ref) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+      await pool.query(sql, [newCode,name, address_customer, address_send, contact, noun, tel, ref]);
       return res.status(200).json({ message: "บันทึกสำเร็จ" });
     }
 
     if (checkId) {
       //บันทึก
-      const sql = `UPDATE auction_title SET name = ?, date = ? WHERE id = ?`;
-      await pool.query(sql, [name, date, id]);
+      const sql = `UPDATE customer SET name = ?, address_customer = ?, address_send = ?, contact = ?, noun = ?, tel = ?, ref = ? WHERE id = ?`;
+      await pool.query(sql, [name, address_customer, address_send, contact, noun, tel, ref, id]);
       return res.status(200).json({ message: "แก้ไขสำเร็จ" });
     }
+
   } catch (error) {
     console.log(error);
     return res.status(500).json(error.message);
@@ -112,9 +121,8 @@ export const getById = async (req, res) => {
   try {
     const { id } = req.params;
     const sql = `SELECT 
-        name , 
-        DATE_FORMAT(date, '%Y-%m-%d') as date 
-        FROM auction_title WHERE id = ?`;
+        name, address_customer, address_send, contact, noun, tel, ref
+        FROM customer WHERE id = ?`;
     const [result] = await pool.query(sql, [id]);
     return res.status(200).json(result[0]);
   } catch (error) {
@@ -129,7 +137,7 @@ export const deleteById = async (req, res) => {
   let pool = await db.getConnection();
   try {
     const { id } = req.params;
-    const sql = `DELETE FROM auction_title WHERE id = ?`;
+    const sql = `DELETE FROM customer WHERE id = ?`;
     await pool.query(sql, [id]);
     return res.status(200).json({ message: "ลบสำเร็จ" });
   } catch (error) {
@@ -142,7 +150,6 @@ export const deleteById = async (req, res) => {
 
 export const exportToExcel = async (req, res) => {
 
-    
   const { startDate, endDate, search } = req.query;
   console.log(req.query);
   
@@ -150,18 +157,12 @@ export const exportToExcel = async (req, res) => {
   try {
     let sql = `SELECT 
       id, 
-      name, 
-      DATE_FORMAT(date, '%d/%m/%Y') as date,
-      status 
-      FROM auction_title `;
+      name, address_customer, address_send, contact, noun, tel, ref 
+      FROM customer `;
 
     let whereConditions = [];
     let params = [];
 
-    if (startDate && endDate) {
-      whereConditions.push(` date BETWEEN ? AND ? `);
-      params.push(startDate, endDate);
-    }
     if (search) {
       whereConditions.push(` name LIKE ? `);
       params.push(`%${search}%`);
@@ -181,8 +182,12 @@ export const exportToExcel = async (req, res) => {
     worksheet.columns = [
       { header: "ID", key: "id", width: 10 },
       { header: "Name", key: "name", width: 30 },
-      { header: "Date", key: "date", width: 15 },
-      { header: "Status", key: "status", width: 10 },
+      { header: "address_customer", key: "address_customer", width: 15 },
+      { header: "address_send", key: "address_send", width: 10 },
+      { header: "contact", key: "contact", width: 10 },
+      { header: "noun", key: "noun", width: 10 },
+      { header: "tel", key: "tel", width: 10 },
+      { header: "ref", key: "ref", width: 10 },
     ];
 
     // เพิ่มข้อมูล
@@ -211,4 +216,3 @@ export const exportToExcel = async (req, res) => {
     if (pool) pool.release();
   }
 };
-
