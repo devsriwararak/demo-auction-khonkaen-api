@@ -78,6 +78,11 @@ async function setupSocket(server) {
       }
     })
 
+    // แคปหน้าจอ
+    socket.on("capture_screen", async(data)=> {
+      io.emit('show_capture_screen', data)
+    })
+
     // รีโหลดจอ
     socket.on("reload_screen", async(data)=> {
       try {
@@ -87,6 +92,17 @@ async function setupSocket(server) {
         io.emit("show_reload_screen", 0);
       }
     })
+
+    // กดเลข 1 2 3 
+    socket.on("change_number_count", async(data)=> {
+      try {
+        io.emit("show_change_number_count", data);
+      } catch (error) {
+        console.error("Error fetching customer data:", error);
+        io.emit("show_change_number_count", 1);
+      }
+    })
+
 
     socket.on("disconnect", () => {
       console.log("Socket disconnected:", socket.id);

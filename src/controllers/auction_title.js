@@ -45,8 +45,14 @@ export const getAll = async (req, res) => {
     }
 
     // Data Main Page
-    sql += ` ORDER BY date DESC LIMIT ? OFFSET ? `;
-    params.push(limit, offset);
+    if(page === 0){
+      sql += ` ORDER BY date DESC LIMIT ?  `;
+      params.push(20)
+    }else {
+      sql += ` ORDER BY date DESC LIMIT ? OFFSET ? `;
+      params.push(limit, offset);
+    }
+    
     const [result] = await pool.query(sql, params);
 
     // Data Total Page
@@ -112,7 +118,7 @@ export const getById = async (req, res) => {
   try {
     const { id } = req.params;
     const sql = `SELECT 
-        name , 
+        id,name , 
         DATE_FORMAT(date, '%Y-%m-%d') as date 
         FROM auction_title WHERE id = ?`;
     const [result] = await pool.query(sql, [id]);

@@ -2,6 +2,7 @@ import db from "../config/db.js";
 import ExcelJS from "exceljs";
 import { genCode } from "../config/lib.js";
 
+// ต้องการเช็คว่า ถ้าส่ง page = 0 มา จะให้แสดงข้อมูลทั้งหมด ไม่มี LIMIT โดยไม่กระทบกับโค้ดเดิม
 export const getAll = async (req, res) => {
   let pool = await db.getConnection();
 
@@ -18,7 +19,9 @@ export const getAll = async (req, res) => {
     let countParams = [];
 
     // SQL main Page
-    let sql = `SELECT id, code, name, tel FROM customer `;
+    let sql = `
+    SELECT id, code, name, tel, address_customer, address_send, contact, noun, tel, ref
+    FROM customer `;
 
     let whereConditions = [];
     let params = [];
@@ -36,8 +39,16 @@ export const getAll = async (req, res) => {
     }
 
     // Data Main Page
-    sql += ` ORDER BY id DESC LIMIT ? OFFSET ? `;
-    params.push(limit, offset);
+    if(page === 0 ){
+      sql += ` ORDER BY id DESC LIMIT ?  `;
+      params.push(20)
+
+    }else {
+      sql += ` ORDER BY id DESC LIMIT ? OFFSET ? `;
+      params.push(limit, offset);
+    }
+
+    
     const [result] = await pool.query(sql, params);
 
     // Data Total Page
@@ -91,7 +102,7 @@ export const addNew = async (req, res) => {
     const [rows] = await pool.query(
       `SELECT code FROM customer ORDER BY code DESC LIMIT 1`
     );
-    const lastCode = rows[0].code;
+    const lastCode = rows[0]?.code || "";
     const newCode = await genCode(lastCode, "BD");
 
     if (!checkId) {
@@ -121,7 +132,7 @@ export const getById = async (req, res) => {
   try {
     const { id } = req.params;
     const sql = `SELECT 
-        name, address_customer, address_send, contact, noun, tel, ref
+        id,name, address_customer, address_send, contact, noun, tel, ref
         FROM customer WHERE id = ?`;
     const [result] = await pool.query(sql, [id]);
     return res.status(200).json(result[0]);
