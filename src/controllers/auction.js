@@ -533,15 +533,17 @@ export const putAuctionById = async (req, res) => {
     note,
     auction_title_id,
     customer_id,
+    customer_name,
     products,
   } = req.body;
   let pool = await db.getConnection();
+  
   console.log(req.body);
   try {
     if (!id) return res.status(400).json({ message: "ส่งข้อมูลไม่ครบ" });
 
     
-    const sqlUpdateAuction = `UPDATE auction SET government = ?, lottery = ?, price = ?,  note = ?, auction_id = ?, customer_id = ? WHERE id = ? `;
+    const sqlUpdateAuction = `UPDATE auction SET government = ?, lottery = ?, price = ?,  note = ?, auction_id = ?, customer_id = ?, customer_name = ? WHERE id = ? `;
     await pool.query(sqlUpdateAuction, [
       government,
       lottery,
@@ -549,6 +551,7 @@ export const putAuctionById = async (req, res) => {
       note,
       auction_title_id,
       customer_id,
+      customer_name,
       id,
     ]);
 

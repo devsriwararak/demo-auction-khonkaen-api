@@ -214,7 +214,9 @@ export const getDataSaleListById = async (req, res) => {
     const { government, lottery } = result[0] || 0;
 
     // Products
-    const sqlList = `SELECT sale_product_list.id, sale_product_list.category_id, product_name, qty , category.name as category_name , sale_product_list.product_id as product_id, product.unit
+    const sqlList = `SELECT sale_product_list.id, sale_product_list.category_id, product_name, qty , category.name as category_name , 
+      sale_product_list.product_id as product_id, sale_product_list.price, sale_product_list.total,
+      product.unit
       FROM sale_product_list 
       INNER JOIN category ON sale_product_list.category_id = category.id
       INNER JOIN product ON sale_product_list.product_id = product.id
@@ -234,6 +236,8 @@ export const getDataSaleListById = async (req, res) => {
         category_name: p.category_name,
         product_id: p.product_id,
         unit: p.unit,
+        price : p.price,
+        total: p.total
       }));
 
       return {
@@ -277,3 +281,40 @@ export const getDataSaleListById = async (req, res) => {
     if (pool) pool.release();
   }
 };
+
+export const updatePay = async (req, res) => {
+  let pool = await db.getConnection();
+  const { id } = req.body;
+  try {
+    if (!id) return res.status(400).json({ message: "ส่งข้อมูลไม่ครบ" });
+
+    const sql = `UPDATE sale SET status = ? WHERE id = ?`;
+    await pool.query(sql, [2, id]);
+    return res.status(200).json({ message: "บันทึกสำเร็จ" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(error.message);
+  } finally {
+    if (pool) pool.release();
+  }
+};
+
+export const cacelBillAuction = async(req,res)=> {
+  const {id} = req.body
+  let pool = await db.getConnection()
+  try {
+    if(!id) return res.status(400).json({message : 'ส่งข้อมูลไม่ครบ'})
+
+      const sql = `UPDATE sale SET status = ? WHERE id = ?`
+      await pool.query(sql, [3, id])
+      return res.status(200).json({message : 'ทำรายการสำเร็จ'})
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(error.message)
+    
+  }finally {
+    if(pool) pool.release()
+  }
+}
+
+
