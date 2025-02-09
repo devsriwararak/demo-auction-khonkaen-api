@@ -153,14 +153,15 @@ export const deleteById = async (req, res) => {
 
 export const exportToExcel = async (req, res) => {
 
-    
   const { category_id, search } = req.query;
   console.log(req.query);
   
   let pool = await db.getConnection();
   try {
-    let sql = `SELECT id, name, unit
-      FROM product `;
+    let sql = `SELECT  product.name AS name, unit , category.name AS category_name
+      FROM product
+      LEFT JOIN category ON product.category_id = category.id
+      `;
 
     let whereConditions = [];
     let params = [];
@@ -188,10 +189,10 @@ export const exportToExcel = async (req, res) => {
 
     // เพิ่มหัวข้อ
     worksheet.columns = [
-      { header: "ID", key: "id", width: 10 },
-      { header: "Name", key: "name", width: 30 },
-      { header: "Date", key: "date", width: 15 },
-      { header: "Status", key: "status", width: 10 },
+      { header: "ชื่อสินค้า", key: "name", width: 10 },
+      { header: "หน่วยนับ", key: "unit", width: 10 },
+      { header: "หมวดหมู่", key: "category_name", width: 10 },
+    
     ];
 
     // เพิ่มข้อมูล

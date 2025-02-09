@@ -166,8 +166,7 @@ export const exportToExcel = async (req, res) => {
   
   let pool = await db.getConnection();
   try {
-    let sql = `SELECT 
-      id, 
+    let sql = `SELECT  
       name, address_customer, address_send, contact, noun, tel, ref 
       FROM customer `;
 
@@ -191,14 +190,13 @@ export const exportToExcel = async (req, res) => {
 
     // เพิ่มหัวข้อ
     worksheet.columns = [
-      { header: "ID", key: "id", width: 10 },
-      { header: "Name", key: "name", width: 30 },
-      { header: "address_customer", key: "address_customer", width: 15 },
-      { header: "address_send", key: "address_send", width: 10 },
-      { header: "contact", key: "contact", width: 10 },
-      { header: "noun", key: "noun", width: 10 },
-      { header: "tel", key: "tel", width: 10 },
-      { header: "ref", key: "ref", width: 10 },
+      { header: "ชื่อ-สกุล", key: "name", width: 30 },
+      { header: "ที่อยู่", key: "address_customer", width: 15 },
+      { header: "ที่อยู่จัดส่ง", key: "address_send", width: 10 },
+      { header: "ผู้ติดต่อ", key: "contact", width: 10 },
+      { header: "ออกฉลากในนาม", key: "noun", width: 10 },
+      { header: "เบอร์โทร", key: "tel", width: 10 },
+      { header: "เลขที่อ้างอิง", key: "ref", width: 10 },
     ];
 
     // เพิ่มข้อมูล

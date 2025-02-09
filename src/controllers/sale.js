@@ -1,5 +1,7 @@
 import db from "../config/db.js";
 import { genCode } from "../config/lib.js";
+import ExcelJS from "exceljs";
+
 
 export const addNewData = async (req, res) => {
   const {
@@ -316,5 +318,80 @@ export const cacelBillAuction = async(req,res)=> {
     if(pool) pool.release()
   }
 }
+
+export const exportToExcel = async (req, res) => {
+
+    
+  const { startDate, endDate, search } = req.query;
+  console.log(req.query);
+  
+  let pool = await db.getConnection();
+  try {
+    let sql = `SELECT  
+      code, price, government, lottery, customer_name, note,
+      DATE_FORMAT(date, '%d/%m/%Y') as date
+      FROM sale `;
+
+    let whereConditions = [];
+    let params = [];
+
+    if (startDate && endDate) {
+      whereConditions.push(` date BETWEEN ? AND ? `);
+      params.push(startDate, endDate);
+    }
+    if (search) {
+      whereConditions.push(` code LIKE ? `);
+      params.push(`%${search}%`);
+    }
+
+    if (whereConditions.length > 0) {
+      sql += ` WHERE ` + whereConditions.join(" AND ");
+    }
+
+    const [result] = await pool.query(sql, params);
+
+    // สร้างไฟล์ Excel
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Auction ");
+
+    // เพิ่มหัวข้อ
+    worksheet.columns = [
+      { header: "เลชที่บิล", key: "code", width: 10 },
+      { header: "สลากออมสิน", key: "government", width: 10 },
+      { header: "ล็อตเตอรี่", key: "lottery", width: 10 },
+      { header: "ผู้บริจาค", key: "customer_name", width: 10 },
+      { header: "ราคา", key: "price", width: 10 },
+      { header: "วันที่", key: "date", width: 10 },
+      { header: "หมายเหตุ", key: "note", width: 10 },
+
+    ];
+
+    // เพิ่มข้อมูล
+    result.forEach((row) => {
+      worksheet.addRow(row);
+    });
+
+    // กำหนดชื่อไฟล์
+    const fileName = `Auction_${startDate || "all"}_${
+      endDate || "all"
+    }.xlsx`;
+
+    // เขียนไฟล์ Excel ลง Memory Buffer
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json(error.message);
+  } finally {
+    if (pool) pool.release();
+  }
+};
+
 
 

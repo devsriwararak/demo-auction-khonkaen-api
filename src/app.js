@@ -12,6 +12,8 @@ import customerRouter from './routes/customer.js'
 import productRouter from './routes/product.js'
 import auctionRouter from './routes/auction.js'
 import saleRouter from './routes/sale.js'
+import debtorRouter from './routes/debtor.js'
+import reportRouter from './routes/report.js'
 import { fileURLToPath } from 'url';
 
 
@@ -33,6 +35,8 @@ app.use('/api/auction_title', auctionTitleRouter)
 app.use('/api/product', productRouter)
 app.use('/api/auction', auctionRouter)
 app.use('/api/sale', saleRouter)
+app.use('/api/debtor', debtorRouter)
+app.use('/api/report', reportRouter)
 
 
   

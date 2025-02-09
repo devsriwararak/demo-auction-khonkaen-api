@@ -148,14 +148,11 @@ export const deleteById = async (req, res) => {
 
 export const exportToExcel = async (req, res) => {
 
-    
   const { startDate, endDate, search } = req.query;
-  console.log(req.query);
   
   let pool = await db.getConnection();
   try {
     let sql = `SELECT 
-      id, 
       name, 
       DATE_FORMAT(date, '%d/%m/%Y') as date,
       status 
@@ -185,10 +182,8 @@ export const exportToExcel = async (req, res) => {
 
     // เพิ่มหัวข้อ
     worksheet.columns = [
-      { header: "ID", key: "id", width: 10 },
-      { header: "Name", key: "name", width: 30 },
-      { header: "Date", key: "date", width: 15 },
-      { header: "Status", key: "status", width: 10 },
+      { header: "หัวข้อประมูล", key: "name", width: 10 },
+      { header: "วันที่", key: "date", width: 10 },
     ];
 
     // เพิ่มข้อมูล

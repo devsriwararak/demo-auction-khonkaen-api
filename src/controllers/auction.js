@@ -624,12 +624,9 @@ export const exportToExcel = async (req, res) => {
   
   let pool = await db.getConnection();
   try {
-    let sql = `SELECT 
-      id, 
-      code,
-      price,
-      DATE_FORMAT(date, '%d/%m/%Y') as date,
-      status 
+    let sql = `SELECT  
+      code, price, government, lottery, customer_name, note,
+      DATE_FORMAT(date, '%d/%m/%Y') as date
       FROM auction `;
 
     let whereConditions = [];
@@ -656,11 +653,14 @@ export const exportToExcel = async (req, res) => {
 
     // เพิ่มหัวข้อ
     worksheet.columns = [
-      { header: "ID", key: "id", width: 10 },
-      { header: "code", key: "code", width: 10 },
-      { header: "price", key: "price", width: 30 },
-      { header: "Date", key: "date", width: 15 },
-      { header: "Status", key: "status", width: 10 },
+      { header: "เลชที่บิล", key: "code", width: 10 },
+      { header: "สลากออมสิน", key: "government", width: 10 },
+      { header: "ล็อตเตอรี่", key: "lottery", width: 10 },
+      { header: "ผู้บริจาค", key: "customer_name", width: 10 },
+      { header: "ราคา", key: "price", width: 10 },
+      { header: "วันที่", key: "date", width: 10 },
+      { header: "หมายเหตุ", key: "note", width: 10 },
+
     ];
 
     // เพิ่มข้อมูล
